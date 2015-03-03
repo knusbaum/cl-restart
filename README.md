@@ -170,7 +170,7 @@ Of course, a function calling do-something can still listen for the signal if it
 
 ### More Info
 
-When writing handlers for keyword exceptions, the keywords must match exactly. Java exceptions, however, work much like they do with the traditional try/catch. If you write a handler for `Exception`, the handler will handle any exceptions of type `Exception` or any subclass of `Exception`. You can provide many handlers with both keyword-exceptions and Java exceptions intermixed. For Java exceptions, where multiple handlers match (For example, a RuntimeException is thrown, and both a RuntimeException handler and an Exception handler are defined), the most specific handler is called.
+When writing handlers for keyword exceptions, the keywords must match exactly. Java exceptions, however, work much like they do with the traditional try/catch. If you write a handler for `Exception`, the handler will handle any exceptions of type `Exception` or any subclass of `Exception`. You can provide many handlers with both keyword-exceptions and Java exceptions intermixed. For Java exceptions, where multiple handlers match (For example, a `RuntimeException` is thrown, and both a `RuntimeException` handler and an `Exception` handler are defined), the most specific handler is called.
 
 ```clojure
 (with-restart-handlers {Exception (fn [e]
