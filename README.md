@@ -125,7 +125,7 @@ Furthermore, it's relatively fast. The stack doesn't get unwound unless it needs
 
 There is also a concept of signals here. Signals provide another way for code high on the stack to communicate with code lower on the stack. They're less intrusive than errors, in that if there's no handler, they go unnoticed. Say you have an application where it's not ever important to really validate the config. Someone still might want to be notified when a bad config is read. Signals will allow you to do this without having to write handlers if you don't care to.
 
-Signals allow you to pass stuff to the handler, wheras regular handlers' only arguments are the exceptions that caused them to be invoked. Here whe're passing the key/value pair that wasn't valid.
+Signals allow you to pass stuff to the handler, wheras regular handlers' only arguments are the exceptions that caused them to be invoked. Here we're passing the key/value pair that wasn't valid.
 
 ```clojure
 (defn parse-config [file]
