@@ -86,8 +86,8 @@ Or one of these (replace :bad-config with Exception or any other Throwable if yo
 (defn do-something-not-too-important []
   (let [less-important-config (with-restart-handlers
                            ; This config is less strict. Maybe other code is going to use some
-                           ; values considered 'invalid.' We should just include the value, even
-                           ; if it's invalid.
+                           ; values considered 'invalid.' We should just include the value,
+                           ; even if it's invalid.
                            {:bad-config (fn [e] (invoke-restart :include))}
                            (parse-config file))]
     ...))
