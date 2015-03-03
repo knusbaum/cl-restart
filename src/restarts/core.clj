@@ -43,7 +43,7 @@
            (handler-function# e#)))
        (if (isa? (class e#) Throwable)
          (throw e#)
-         (throw (RuntimeException. (str "Failed to catch error: " e#)))))))
+         (throw (RuntimeException. e#))))))
 
 (defmacro signal [e & args]
   `(let [e# ~e]
