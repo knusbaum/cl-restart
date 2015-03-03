@@ -54,7 +54,7 @@ or, if you want to use Java Throwables:
 
 Code higher on the stack can determine what kind of strategy to use for recovery by calling (invoke-restart ...). It can wait for a :bad-config error and choose to continue by including the bad pair, continue by rejecting it, or choose to bail on reading the config altogether. Then calling function might look like one of these:
 ```clojure
-(defn do-something-important
+(defn do-something-important []
   (let [important-config (with-restart-handlers
                            ; This is the exception -> handler map.
                            ; This config is important. It has to be valid.
@@ -67,7 +67,7 @@ Code higher on the stack can determine what kind of strategy to use for recovery
 
 Or for throwing a Java Throwable:
 ```clojure
-(defn do-something-important
+(defn do-something-important []
   (let [important-config (with-restart-handlers
                            ; This is the exception -> handler map.
                            ; This config is important. It has to be valid.
@@ -81,7 +81,7 @@ Or for throwing a Java Throwable:
 
 Or one of these (replace :bad-config with Exception or any other Throwable if you like):
 ```clojure
-(defn do-something-not-too-important
+(defn do-something-not-too-important []
   (let [less-important-config (with-restart-handlers
                            ; This config is less strict. Maybe other code is going to use some
                            ; values considered 'invalid.' We should just include the value, even
@@ -90,7 +90,7 @@ Or one of these (replace :bad-config with Exception or any other Throwable if yo
                            (parse-config file))]
     ...))
 
-(defn do-something-else
+(defn do-something-else []
   (let [less-important-config (with-restart-handlers
                            ; This is just a config where the policy is to ignore config pairs 
                            ; that don't validate. We should ignore pairs that aren't valid.
@@ -98,7 +98,7 @@ Or one of these (replace :bad-config with Exception or any other Throwable if yo
                            (parse-config file))]
     ...))
 
-(defn do-something-else
+(defn do-something-else []
   ; Or just call parse-config without catching the errors.
   ; Code higher on the stack might have restart handlers.
   ; If nobody on the stack has a handler for the error, 
@@ -118,6 +118,54 @@ The last example, where no restart-handlers are defined, one of three things hap
 There. Now we have a way to determine how functions further down the callstack should behave when they encounter issues. Higher-up functions don't have to know how lower functions work, but can still specify how they behave when something goes wrong if they choose.
 
 Furthermore, it's relatively fast. The stack doesn't get unwound unless it needs to be. The function `parse-config` can encounter an error mid-processing and continue without throwing an exception if a caller determines which restart it should use to finish the job.
+
+### Signaling events
+
+There is also a concept of signals here. Signals provide another way for code high on the stack to communicate with code lower on the stack. They're less intrusive than errors, in that if there's no handler, they go unnoticed. Say you have an application where it's not ever important to really validate the config. Someone still might want to be notified when a bad config is read. Signals will allow you to do this without having to write handlers if you don't care to.
+
+Signals allow you to pass stuff to the handler, wheras regular handlers' only arguments are the exceptions that caused them to be invoked. Here whe're passing the key/value pair that wasn't valid.
+
+```clojure
+(defn parse-config [file]
+  (into {}
+        (for [[k v] (read-conf file)]
+          (do
+            (when (not (valid? k v))
+              (signal :bad-config [k v]))
+            [k v]))))
+```
+
+When `parse-config` encounters a bad config, it signals with :bad-config. (Again, you can use Throwables if you like) Calling functions can listen for this signal if they're interested:
+
+```clojure
+(defn do-something []
+  (let [config (with-restart-handlers
+                 ; This is the exception -> handler map.
+                 ; We're watching for bad-config signals so we can log them.
+                 {:bad-config (fn [[k v]] (log/info (str "Bad config item: " k " -> " v)))}
+                 (parse-config file))]
+    ...))
+```
+
+Notice the `:bad-config` handler accepts a key/value pair, just what the signal provides as arguments to the handler.
+
+It can just as easily ignore the signal, never having to know the underlying function was using signals at all:
+
+```clojure
+(defn do-something []
+  ; Just a config. All signals go unnoticed.
+  (let [config (parse-config file)]
+    ...))
+```
+
+Of course, a function calling do-something can still listen for the signal if it wants to.
+
+```clojure
+(defn do-something-else
+  (with-restart-handlers {:bad-config (fn [[k v]] (log/info "Bad config: " k " -> " v))}
+    (do-something)))
+```
+
 
 ## License
 
