@@ -123,12 +123,12 @@ Or one of these (replace :bad-config with Exception or any other Throwable if yo
     ...))
 ```
 
-The last example, where no restart-handlers are defined, one of three things happens:
+The last example, where no restart-handlers are defined, one of four things happens:
 
 1. A function somewhere on the stack has defined handlers, and it decides which restart to call.
-2. No function on the stack has defined handlers for the error and the error was a keyword. (i.e. `:bad-config`) In this case, the error is converted into a `RuntimeException` with a string of the keyword as the message and thrown. 
-3. No function on the stack has defined handlers for the error and the error was a Java `Throwable`. In this case, the `Throwable` is thrown.
-
+2. No function on the stack has defined handlers, but `throw-restart` has a `default` handler defined. In this case, the default handler is run.
+3. No function on the stack has defined handlers for the error, no `default` is defined, and the error was a keyword. (i.e. `:bad-config`) In this case, the error is converted into a `RuntimeException` with a string of the keyword as the message and thrown. 
+4. No function on the stack has defined handlers for the error, no `default` is defined, and the error was a Java `Throwable`. In this case, the `Throwable` is thrown.
 
 There. Now we have a way to determine how functions further down the callstack should behave when they encounter issues. Higher-up functions don't have to know how lower functions work, but can still specify how they behave when something goes wrong if they choose.
 
