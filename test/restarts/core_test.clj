@@ -55,12 +55,12 @@
                                   (fail [] {:success false}))))))
   (testing "Throwing keyword errors and invoking restarts."
      (is (= {:success true}
-           (with-restart-handlers {:some-error (fn [^Exception e] (invoke-restart :continue))}
+           (with-restart-handlers {:some-error (fn [e] (invoke-restart :continue))}
              (throw-restart :some-error
                             (continue [] {:success true})
                             (fail [] {:success false})))))
     (is (= {:success false}
-           (with-restart-handlers {:some-error (fn [^Exception e] (invoke-restart :fail))}
+           (with-restart-handlers {:some-error (fn [e] (invoke-restart :fail))}
              (throw-restart :some-error
                             (continue [] {:success true})
                             (fail [] {:success false}))))))
@@ -72,7 +72,21 @@
                                   (fail [] {:success false}))))))
   (testing "Throwing keyword and invoking a bad restart."
     (is (thrown? RuntimeException
-                 (with-restart-handlers {:some-error (fn [^Exception e] (invoke-restart :not-a-real-restart))}
+                 (with-restart-handlers {:some-error (fn [e] (invoke-restart :not-a-real-restart))}
                    (throw-restart :some-error
                                   (continue [] {:success true})
-                                  (fail [] {:success false})))))))
+                                  (fail [] {:success false}))))))
+  (testing "Default Handlers"
+    (is (= {:default true}
+           (with-restart-handlers {:some-other-error (fn [e] (invoke-restart :not-a-real-restart))}
+             (throw-restart :some-error
+                            (continue [] {:success true})
+                            (fail [] {:success false})
+                            (default [] {:default true}))))))
+  (testing "Default Handlers don't interfere"
+    (is (= {:success true}
+           (with-restart-handlers {:some-error (fn [e] (invoke-restart :continue))}
+             (throw-restart :some-error
+                            (continue [] {:success true})
+                            (fail [] {:success false})
+                            (default [] {:default true})))))))

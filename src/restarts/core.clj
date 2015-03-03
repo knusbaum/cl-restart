@@ -21,6 +21,16 @@
                 acc))
             candidates)))
 
+(defn handlers-to-map [forms]
+  (apply
+   hash-map
+   (apply concat
+          (for [restart forms]
+            (let [restart-name (keyword (first restart))
+                  arglist (second restart)
+                  body (drop 2 restart)]
+              [restart-name `(fn ~arglist ~@body)])))))
+
 (defmacro throw-restart [e & forms]
   `(let [e# ~e]
      (if (or
@@ -29,21 +39,17 @@
        (binding [restarts
                  (merge
                   restarts
-                  ~(apply
-                    hash-map
-                    (apply concat
-                           (for [restart forms]
-                             (let [restart-name (keyword (first restart))
-                                   arglist (second restart)
-                                   body (drop 2 restart)]
-                               [restart-name `(fn ~arglist ~@body)])))))]
+                  ~(handlers-to-map forms))]
          (let [handler-function# (if (keyword? e#)
                                    (handlers e#)
                                    (handlers (get-handler-for-instance handlers e#)))]
            (handler-function# e#)))
-       (if (isa? (class e#) Throwable)
-         (throw e#)
-         (throw (RuntimeException. e#))))))
+       (binding [restarts (merge restarts ~(handlers-to-map forms))]
+         (if (restarts :default)
+           ((restarts :default))
+           (if (isa? (class e#) Throwable)
+             (throw e#)
+             (throw (RuntimeException. e#))))))))
 
 (defmacro signal [e & args]
   `(let [e# ~e]
@@ -55,3 +61,4 @@
                                  (handlers e#)
                                  (handlers (get-handler-for-instance handlers e#)))]
          (handler-function# ~@args)))))
+
