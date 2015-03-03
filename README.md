@@ -23,7 +23,7 @@ Got Value: Cool Value
 
 The basic idea is that when throwing an exception, you are able to provide 'restarts.' Restarts are just functions that allow code higher-up on the stack to specify a recovery mechanism if it wants.
 
-The easiest place to recover from errors is where the error happens, but it can be difficult to decide how to best handle errors when different strategies might be desired depending on the situation.
+When writing code in any language, the easiest place to recover from an error is where the error happens, but it can be difficult to decide how to best handle errors when different strategies might be desired depending on the situation.
 
 For example:
 A function `(defn parse-config [file] ...)` might have the job of parsing and validating various config files. Depending on the particular config, maybe a missing config value or an extra config value is ok, or maybe it means the config is bad and we have to deal with it. It's hard to decide how to handle that in parse-config. On the one hand, I can throw an exception when I get a config value that doesn't validate. On the other, I can just include the bad config and hope the code above me will take care of it. Neither of these seems particularly desirable, since if you're not careful to know how the underlying function works, you can end up with bad configs or unwanted exceptions.
