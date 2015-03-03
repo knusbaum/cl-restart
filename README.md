@@ -30,7 +30,7 @@ A function `(defn parse-config [file] ...)` might have the job of parsing and va
 
 Common Lisp style restarts provide a solution to this problem. When you encounter a potential error in a function, you can throw an error, but provide 'restarts' that code higher on the stack can choose to continue with. The value of `(throw-restart ...)` is the return value of the restart that is called.
 
-In our previous example, parse-config might look like:
+In our previous example, `parse-config` might look like:
 ```clojure
 (defn parse-config [file]
   (into {}
