@@ -54,7 +54,7 @@ or, if you want to use Java Throwables:
 ```
 
 
-Code higher on the stack can determine what kind of strategy to use for recovery by calling (invoke-restart ...). It can wait for a :bad-config error and choose to continue by including the bad pair, continue by rejecting it, or choose to bail on reading the config altogether. Then the calling function might look like one of these:
+Code higher on the stack can determine what kind of strategy to use for recovery by calling (invoke-restart ...). It can wait for a `:bad-config` error and choose to continue by including the bad pair, continue by rejecting it, or choose to bail on reading the config altogether. Then the calling function might look like one of these:
 ```clojure
 (defn do-something-important []
   (let [important-config (with-restart-handlers
@@ -113,8 +113,8 @@ Or one of these (replace :bad-config with Exception or any other Throwable if yo
 The last example, where no restart-handlers are defined, one of three things happens:
 
 1. A function somewhere on the stack has defined handlers, and it decides which restart to call.
-2. No function on the stack has defined handlers for the error and the error was a keyword. (i.e. :bad-config) In this case, the error is converted into a RuntimeException with a string of the keyword as the message and thrown. 
-3. No function on the stack has defined handlers for the error and the error was a Java Throwable. In this case, the Throwable is thrown.
+2. No function on the stack has defined handlers for the error and the error was a keyword. (i.e. `:bad-config`) In this case, the error is converted into a `RuntimeException` with a string of the keyword as the message and thrown. 
+3. No function on the stack has defined handlers for the error and the error was a Java `Throwable`. In this case, the `Throwable` is thrown.
 
 
 There. Now we have a way to determine how functions further down the callstack should behave when they encounter issues. Higher-up functions don't have to know how lower functions work, but can still specify how they behave when something goes wrong if they choose.
@@ -137,7 +137,7 @@ Signals allow you to pass stuff to the handler, wheras regular handlers' only ar
             [k v]))))
 ```
 
-When `parse-config` encounters a bad config, it signals with :bad-config. (Again, you can use Throwables if you like) Calling functions can listen for this signal if they're interested:
+When `parse-config` encounters a bad config, it signals with `:bad-config`. (Again, you can use Throwables if you like) Calling functions can listen for this signal if they're interested:
 
 ```clojure
 (defn do-something []
