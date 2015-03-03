@@ -54,7 +54,7 @@ or, if you want to use Java Throwables:
 ```
 
 
-Code higher on the stack can determine what kind of strategy to use for recovery by calling (invoke-restart ...). It can wait for a `:bad-config` error and choose to continue by including the bad pair, continue by rejecting it, or choose to bail on reading the config altogether. Then the calling function might look like one of these:
+Code higher on the stack can determine what kind of strategy to use for recovery by calling `(invoke-restart ...)`. It can wait for a `:bad-config` error and choose to continue by including the bad pair, continue by rejecting it, or choose to bail on reading the config altogether. Then the calling function might look like one of these:
 ```clojure
 (defn do-something-important []
   (let [important-config (with-restart-handlers
