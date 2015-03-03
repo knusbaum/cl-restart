@@ -209,6 +209,16 @@ Caught Exception.
 
 Be careful. You must match the arity of the restart when calling `invoke-restart`.
 
+### Safety
+
+The restart library is thread-safe. Handlers and Restarts are provided on a per-thread basis, so they can be used safely virtually anywhere.
+
+The library is also unintrusive. Code that doesn't interact with it incurs no performance hit at all, even if code somewhere else is using it. Restarts and handlers are only kept around for the lifetime of the dynamic scope they're involved in.
+
+### More Reading
+
+For more on restarts, check out this page: [Practical Common Lisp](http://www.gigamonkeys.com/book/beyond-exception-handling-conditions-and-restarts.html)
+
 ## License
 
 Copyright © 2015 Kyle Nusbaum
