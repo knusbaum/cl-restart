@@ -130,7 +130,7 @@ The last example, where no restart-handlers are defined, one of four things happ
 3. No function on the stack has defined handlers for the error, no `default` is defined, and the error was a keyword. (i.e. `:bad-config`) In this case, the error is converted into a `RuntimeException` with a string of the keyword as the message and thrown. 
 4. No function on the stack has defined handlers for the error, no `default` is defined, and the error was a Java `Throwable`. In this case, the `Throwable` is thrown.
 
-There. Now we have a way to determine how functions further down the callstack should behave when they encounter issues. Higher-up functions don't have to know how lower functions work, but can still specify how they behave when something goes wrong if they choose.
+There. Now we have a way to determine how functions further down the callstack should behave when they encounter issues. Higher-up functions don't have to know how lower functions work, but can still specify how they behave when something goes wrong if they choose. If not, we have a way to describe how a function should continue by default if calling functions don't tell it how to handle the error.
 
 Furthermore, it's relatively fast. The stack doesn't get unwound unless it needs to be. The function `parse-config` can encounter an error mid-processing and continue without throwing an exception if a caller determines which restart it should use to finish the job.
 
