@@ -2,6 +2,8 @@
 
 A Clojure library providing basic Common Lisp style restarts for Clojure.
 
+[![Clojars Project](http://clojars.org/org.clojars.knusbaum/restarts/latest-version.svg)](http://clojars.org/org.clojars.knusbaum/restarts)
+
 ## Usage
 
 ```clojure
