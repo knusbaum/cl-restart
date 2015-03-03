@@ -166,6 +166,48 @@ Of course, a function calling do-something can still listen for the signal if it
     (do-something)))
 ```
 
+### More Info
+
+When writing handlers for keyword exceptions, the keywords must match exactly. Java exceptions, however, work much like they do with the traditional try/catch. If you write a handler for `Exception`, the handler will handle any exceptions of type `Exception` or any subclass of `Exception`. You can provide many handlers with both keyword-exceptions and Java exceptions intermixed. For Java exceptions, where multiple handlers match (For example, a RuntimeException is thrown, and both a RuntimeException handler and an Exception handler are defined), the most specific handler is called.
+
+```clojure
+(with-restart-handlers {Exception (fn [e]
+                                    (println "Caught Exception.")
+                                    (invoke-restart :continue))
+                        RuntimeException (fn [e]
+                                           (println "Caught RuntimeException.")
+                                           (invoke-restart :continue))}
+  (throw-restart (RuntimeException. "Runtime!")
+                 (continue [] :success)))
+Caught RuntimeException.
+=> :success
+```
+
+Without defining a `RuntimeException` handler, the `Exception` handler is called, since `RuntimeException` inherits from `Exception`.
+
+```clojure
+(with-restart-handlers {Exception (fn [e]
+                                    (println "Caught Exception.")
+                                    (invoke-restart :continue))}
+  (throw-restart (RuntimeException. "Runtime!")
+                 (continue [] :success)))
+Caught Exception.
+=> :success
+```
+
+You may have noticed the syntax for handlers includes a name, a vector, and a body. The name is obvious. The vector is an argument list. You may provide additional arguments to `invoke-restart` which will be passed to the restart:
+
+```clojure
+(with-restart-handlers {Exception (fn [e]
+                                    (println "Caught Exception.")
+                                    (invoke-restart :continue :foo))}
+  (throw-restart (RuntimeException. "Runtime!")
+                 (continue [x] x)))
+Caught Exception.
+=> :foo
+```
+
+Be careful. You must match the arity of the restart when calling `invoke-restart`.
 
 ## License
 
