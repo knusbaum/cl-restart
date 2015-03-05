@@ -105,3 +105,31 @@
                             (continue [x] {:success x})
                             (fail [] {:success false})
                             (default [] {:default true})))))))
+
+;; I almost fell for this before. We can't necessarily
+;; determine the type of exception at compile-time,
+;; since the type of exception can be the result of
+;; a function call.
+;; All of the macros have to work on S-expressions of any
+;; resulting type, which can't necessarily be evaluated at
+;; compile-time.
+(deftest can-throw-with-vars
+  (testing "Exceptions can be results of evaluating things within a context."
+    (is (= {:success true}
+           (let [v :foo
+                 id-function #(do %)]
+             (with-restart-handlers {:some-error (fn [e x]
+                                                   (invoke-restart :continue x))}
+               (throw-restart [(id-function :some-error) true]
+                              (continue [x] {:success x})
+                              (fail [] {:success false})
+                              (default [] {:default true}))))))
+    (is (= {:success true}
+           (let [exception-fn (fn [] (Exception.))]
+             (with-restart-handlers {Exception (fn [e x]
+                                                 (invoke-restart :continue x))}
+               (throw-restart [(exception-fn) true]
+                              (continue [x] {:success x})
+                              (fail [] {:success false})
+                              (default [] {:default true}))))))))
+  
