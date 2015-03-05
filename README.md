@@ -157,15 +157,10 @@ Handlers can determine what kind of strategy to use for recovery by calling `(in
                            ; This config is less strict. Maybe other code is going to use some
                            ; values considered 'invalid.' We should just include the value,
                            ; even if it's invalid.
-                           {:bad-config (fn [e] (invoke-restart :include))}
-                           (parse-config file))]
-    ...))
-
-(defn do-something-else []
-  (let [less-important-config (with-restart-handlers
-                           ; This is just a config where the policy is to ignore config pairs 
-                           ; that don't validate. We should ignore pairs that aren't valid.
-                           {:bad-config (fn [e] (invoke-restart :reject))}
+                           {:bad-config (fn [e [k v]]
+                                          (if (should-include? k v)
+                                            (invoke-restart :include)
+                                            (invoke-restart :reject)))}
                            (parse-config file))]
     ...))
 
@@ -173,7 +168,8 @@ Handlers can determine what kind of strategy to use for recovery by calling `(in
   ; Or just call parse-config without catching the errors.
   ; Code higher on the stack might have restart handlers.
   ; If nobody on the stack has a handler for the error, 
-  ; it'll be treated as a regular Java exception.
+  ; it'll be handled by the default handler if there is one.
+  ; If not, it is treated as a regular Java exception.
   ; (will be caught by try/catch blocks or kill the program)
   (let [config (parse-config file)]
     ...))
