@@ -32,24 +32,35 @@
               [restart-name `(fn ~arglist ~@body)])))))
 
 (defmacro throw-restart [e & forms]
-  `(let [e# ~e]
-     (if (or
-          (and (keyword? e#) (contains? handlers e#))
-          (some #(isa? (class e#) %) (keys handlers)))
-       (binding [restarts
-                 (merge
-                  restarts
-                  ~(handlers-to-map forms))]
-         (let [handler-function# (if (keyword? e#)
-                                   (handlers e#)
-                                   (handlers (get-handler-for-instance handlers e#)))]
-           (handler-function# e#)))
-       (binding [restarts (merge restarts ~(handlers-to-map forms))]
-         (if (restarts :default)
-           ((restarts :default))
-           (if (isa? (class e#) Throwable)
-             (throw e#)
-             (throw (RuntimeException. e#))))))))
+  (let [[ex & the-rest]
+        (if (vector? e)
+          e
+          [e])
+        evald-e (eval ex)]
+    (let [e-sym (gensym)]
+      `(let [~e-sym ~ex]
+         (if (or
+              (and (keyword? ~e-sym) (contains? handlers ~e-sym))
+              (some #(isa? (class ~e-sym) %) (keys handlers)))
+           (binding [restarts
+                     (merge
+                      restarts
+                      ~(handlers-to-map forms))]
+             (let [handler-function#
+                   ~(cond
+                     (keyword? evald-e)     `(handlers ~e-sym)
+                     (isa? (class evald-e)
+                           Throwable)         `(handlers
+                                                (get-handler-for-instance
+                                                 handlers ~e-sym)))]
+                
+                (handler-function# ~e-sym ~@the-rest)))
+           (binding [restarts (merge restarts ~(handlers-to-map forms))]
+             (if (restarts :default)
+               ((restarts :default))
+               ~(if (isa? (class evald-e) Throwable)
+                  `(throw ~e-sym)
+                  `(throw (RuntimeException. ~e-sym))))))))))
 
 (defmacro signal [e & args]
   `(let [e# ~e]

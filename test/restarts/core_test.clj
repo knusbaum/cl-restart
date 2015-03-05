@@ -89,4 +89,19 @@
              (throw-restart :some-error
                             (continue [] {:success true})
                             (fail [] {:success false})
+                            (default [] {:default true}))))))
+  (testing "Vector throws"
+    (is (= {:success true}
+           (with-restart-handlers {:some-error (fn [e x]
+                                                 (invoke-restart :continue x))}
+             (throw-restart [:some-error true]
+                            (continue [x] {:success x})
+                            (fail [] {:success false})
+                            (default [] {:default true})))))
+    (is (= {:success true}
+           (with-restart-handlers {Exception (fn [e x]
+                                               (invoke-restart :continue x))}
+             (throw-restart [(RuntimeException. "foo") true]
+                            (continue [x] {:success x})
+                            (fail [] {:success false})
                             (default [] {:default true})))))))
