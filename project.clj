@@ -1,4 +1,4 @@
-(defproject org.clojars.knusbaum/restarts "0.0.1-SNAPSHOT"
+(defproject restarts "0.0.2"
   :description "A simple Common Lisp style restart library for Clojure."
   :url "http://www.github.com/knusbaum/cl-restart"
   :license {:name "Eclipse Public License"
