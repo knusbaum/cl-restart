@@ -39,7 +39,8 @@ In our previous example, `parse-config` might look like:
             [k v]
             (throw-restart :bad-config
                            (include [] [k v])
-                           (reject [] nil))))))
+                           (reject [] nil)
+                           (replace [x] x))))))
 ```
 or, if you want to use Java Throwables:
 ```clojure
@@ -50,7 +51,8 @@ or, if you want to use Java Throwables:
             [k v]
             (throw-restart (Exception. "Bad Config.")
                            (include [] [k v])
-                           (reject [] nil))))))
+                           (reject [] nil)
+                           (replace [x] x))))))
 ```
 
 `throw-restart` can also be given a special restart, called `default` which will run if no handlers are set up to handle the error. If we want to include the bad config by default in case no handlers are installed, `parse-config` might look like this:
@@ -63,11 +65,11 @@ or, if you want to use Java Throwables:
             (throw-restart (Exception. "Bad Config.")
                            (include [] [k v])
                            (reject [] nil)
+                           (replace [x] x)
                            (default [] [k v]))))))
 ```
 
-
-Code higher on the stack can determine what kind of strategy to use for recovery by calling `(invoke-restart ...)`. It can wait for a `:bad-config` error and choose to continue by including the bad pair, continue by rejecting it, or choose to bail on reading the config altogether. Then the calling function might look like one of these:
+Code higher on the stack can determine what kind of strategy to use for recovery by calling `(invoke-restart ...)`. It can wait for a `:bad-config` error and choose to continue by including the bad pair, continue by rejecting it, continue by replacing it, or choose to bail on reading the config altogether. Then the calling function might look like one of these:
 ```clojure
 (defn do-something-important []
   (let [important-config (with-restart-handlers
@@ -93,6 +95,61 @@ Or for throwing a Java Throwable:
                            (parse-config file))]
     ...))
 ```
+
+It could be helpful in this case if the handler could take a look at the value that caused the exception. Restarts lets you throw some data up along with the exception if you want to:
+
+```clojure
+(defn parse-config [file]
+  (into {}
+        (for [[k v] (read-conf file)]
+          (if (valid? k v)
+            [k v]
+            (throw-restart [:bad-config [k v]]
+                           (include [] [k v])
+                           (reject [] nil)
+                           (replace [x] x)
+                           (default [] [k v]))))))
+
+(defn parse-config [file]
+  (into {}
+        (for [[k v] (read-conf file)]
+          (if (valid? k v)
+            [k v]
+            (throw-restart [(Exception. "Bad Config.") [k v]]
+                           (include [] [k v])
+                           (reject [] nil)
+                           (replace [x] x)
+                           (default [] [k v]))))))
+```
+
+In which case, the handlers might look like this:
+
+```clojure
+(defn do-something-important []
+  (let [important-config (with-restart-handlers
+                           ; This is the exception -> handler map.
+                           ; This config is important. It has to be valid.
+                           ; We should throw a Java exception if the config isn't valid.
+                           {:bad-config (fn [e kv-pair]
+                                          (throw RuntimeException.
+                                                 (str "Invalid Config: " file
+                                                      " " kv-pair)))}
+                           (parse-config file))]
+    ...))
+
+(defn do-something-important []
+  (let [important-config (with-restart-handlers
+                           ; This is the exception -> handler map.
+                           ; This config is important. It has to be valid.
+                           ; We should throw a Java exception if the config isn't valid.
+                           {Exception (fn [e kv-pair]
+                                          (throw (RuntimeException.
+                                                  (str "Invalid Config: " file
+                                                       " " kv-pair) e)))}
+                           (parse-config file))]
+    ...))
+```
+
 
 Or one of these (replace :bad-config with Exception or any other Throwable if you like):
 ```clojure
