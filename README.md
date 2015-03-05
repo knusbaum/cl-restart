@@ -96,7 +96,7 @@ Or for throwing a Java Throwable:
     ...))
 ```
 
-It could be helpful in this case if the handler could take a look at the value that caused the exception. Restarts lets you throw some data up along with the exception if you want to:
+It could be helpful in this case if the handler could take a look at the value that caused the exception. `throw-restart` lets you throw some data up along with the exception if you want to:
 
 ```clojure
 (defn parse-config [file]
@@ -154,9 +154,8 @@ Handlers can determine what kind of strategy to use for recovery by calling `(in
 ```clojure
 (defn do-something-not-too-important []
   (let [less-important-config (with-restart-handlers
-                           ; This config is less strict. Maybe other code is going to use some
-                           ; values considered 'invalid.' We should just include the value,
-                           ; even if it's invalid.
+                           ; We can check if we want to include this key/value
+                           ; pair and either include or reject it.
                            {:bad-config (fn [e [k v]]
                                           (if (should-include? k v)
                                             (invoke-restart :include)
@@ -278,7 +277,7 @@ Be careful. You must match the arity of the restart when calling `invoke-restart
 
 ### Safety
 
-The restart library is thread-safe. Handlers and Restarts are provided on a per-thread basis, so they can be used safely virtually anywhere.
+The restart library is thread-safe. Handlers and restarts are provided on a per-thread basis, so they can be used safely virtually anywhere.
 
 The library is also unintrusive. Code that doesn't interact with it incurs no performance hit at all, even if code somewhere else is using it. Restarts and handlers are only kept around for the lifetime of the dynamic scope they're involved in.
 
